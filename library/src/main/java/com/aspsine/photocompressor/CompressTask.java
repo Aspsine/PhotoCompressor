@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Created by aspsine on 16/1/12.
  */
-public abstract class CompressTask implements Runnable {
+public class CompressTask implements Runnable {
 
     public static final String TAG = CompressTask.class.getSimpleName();
 
