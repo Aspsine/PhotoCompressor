@@ -17,40 +17,39 @@ public class CompressHandler extends Handler {
 
     public static final int STATUS_FAILURE = -1;
 
-    private WeakReference<CompressCallback> mCallbackReference;
+    private CompressCallback mCallback;
 
     public CompressHandler() {
 
     }
 
     public CompressHandler(CompressCallback callback) {
-        this.mCallbackReference = new WeakReference<CompressCallback>(callback);
+        this.mCallback = callback;
     }
 
     public void setCompressCallback(CompressCallback callback) {
         clear();
-        this.mCallbackReference = new WeakReference<CompressCallback>(callback);
+        this.mCallback = callback;
     }
 
     @Override
     public void handleMessage(Message msg) {
-        CompressCallback callback = mCallbackReference.get();
         switch (msg.what) {
             case STATUS_PROGRESS:
-                if (callback != null) {
-                    callback.onProgress(msg.arg1, msg.arg2);
+                if (mCallback != null) {
+                    mCallback.onProgress(msg.arg1, msg.arg2);
                 }
                 break;
             case STATUS_COMPLETE:
                 List<String> paths = (List<String>) msg.obj;
-                if (callback != null) {
-                    callback.onComplete(paths);
+                if (mCallback != null) {
+                    mCallback.onComplete(paths);
                 }
                 break;
             case STATUS_FAILURE:
                 Exception e = (Exception) msg.obj;
-                if (callback != null) {
-                    callback.onFailure(e);
+                if (mCallback != null) {
+                    mCallback.onFailure(e);
                 }
                 break;
         }
@@ -80,9 +79,8 @@ public class CompressHandler extends Handler {
 
     public void clear() {
         removeCallbacksAndMessages(null);
-        if (mCallbackReference != null) {
-            mCallbackReference.clear();
-            mCallbackReference = null;
+        if (mCallback != null) {
+            mCallback = null;
         }
     }
 }
