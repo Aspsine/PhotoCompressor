@@ -83,40 +83,26 @@ public class CompressTask implements Runnable {
     protected Bitmap getCompressedBitmap(String path, CompressOptions compressOptions) throws IOException {
         BitmapFactory.Options options = createInitDecodeOptions();
 
-        BufferedInputStream inputStream = null;
-        try {
-            inputStream = new BufferedInputStream(new FileInputStream(path));
-            BitmapFactory.decodeStream(inputStream, null, options);
+        BitmapFactory.decodeFile(path, options);
 
-            int outWidth = options.outWidth;
-            int outHeight = options.outHeight;
+        int outWidth = options.outWidth;
+        int outHeight = options.outHeight;
 
-            float bei = getBei(outWidth, outHeight, compressOptions.maxPixel);
+        float bei = getBei(outWidth, outHeight, compressOptions.maxPixel);
 
-            options.inJustDecodeBounds = false;
-            options.inSampleSize = (int) bei;
+        options.inJustDecodeBounds = false;
+        options.inSampleSize = (int) bei;
 
-            inputStream.reset();
+        Bitmap bitmap = BitmapFactory.decodeFile(path, options);
 
-            Bitmap bitmap = BitmapFactory.decodeStream(inputStream, null, options);
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
 
-            int width = bitmap.getWidth();
-            int height = bitmap.getHeight();
+        bei = getBei(width, height, compressOptions.maxPixel);
+        width = (int) (width / bei);
+        height = (int) (height / bei);
 
-            bei = getBei(width, height, compressOptions.maxPixel);
-            width = (int) (width / bei);
-            height = (int) (height / bei);
-
-            return Bitmap.createScaledBitmap(bitmap, width, height, false);
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        return Bitmap.createScaledBitmap(bitmap, width, height, false);
     }
 
 
