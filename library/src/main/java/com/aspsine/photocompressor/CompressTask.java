@@ -80,7 +80,7 @@ public class CompressTask implements Runnable {
         return null;
     }
 
-    protected Bitmap getCompressedBitmap(String path, CompressOptions compressOptions) throws FileNotFoundException {
+    protected Bitmap getCompressedBitmap(String path, CompressOptions compressOptions) throws IOException {
         BitmapFactory.Options options = createInitDecodeOptions();
 
         BufferedInputStream inputStream = null;
@@ -95,6 +95,9 @@ public class CompressTask implements Runnable {
 
             options.inJustDecodeBounds = false;
             options.inSampleSize = (int) bei;
+
+            inputStream.reset();
+
             Bitmap bitmap = BitmapFactory.decodeStream(inputStream, null, options);
 
             int width = bitmap.getWidth();
