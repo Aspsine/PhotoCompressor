@@ -100,6 +100,9 @@ public class CompressTask implements Runnable {
             int width = bitmap.getWidth();
             int height = bitmap.getHeight();
 
+            bei = getBei(width, height, compressOptions.maxPixel);
+            width = (int) (width / bei);
+            height = (int) (height / bei);
 
             return Bitmap.createScaledBitmap(bitmap, width, height, false);
         } finally {
@@ -128,11 +131,11 @@ public class CompressTask implements Runnable {
         return MD5.md5(path);
     }
 
-    public int getBei(int outWidth, int outHeight, int preferSize) {
+    public float getBei(int outWidth, int outHeight, int preferSize) {
         int biggerOne = outWidth > outHeight ? outWidth : outHeight;
-        int bei = 1;
+        float bei = 1;
         if (biggerOne > preferSize) {
-            bei = Math.round(preferSize / (float)biggerOne);
+            bei = biggerOne / (float) preferSize;
         }
         return bei;
     }
