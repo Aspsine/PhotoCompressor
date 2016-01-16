@@ -3,7 +3,6 @@ package com.aspsine.photocompressor;
 import android.os.Handler;
 import android.os.Message;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 
 /**

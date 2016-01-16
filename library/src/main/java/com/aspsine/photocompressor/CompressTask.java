@@ -6,10 +6,8 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -47,6 +45,7 @@ public class CompressTask implements Runnable {
             List<String> paths = new ArrayList<>();
             int total = mPaths.size();
             for (int i = 0; i < total; i++) {
+                mHandler.progress(total, i + 1);
                 String path = mPaths.get(i);
                 File file = new File(path);
                 if (!file.exists()) {
@@ -61,7 +60,6 @@ public class CompressTask implements Runnable {
                 } else {
                     Log.e(TAG, "Compressed failed:" + path);
                 }
-                mHandler.progress(total, i + 1);
             }
             mHandler.complete(paths);
         } catch (Exception e) {
