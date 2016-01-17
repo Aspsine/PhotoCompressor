@@ -3,11 +3,12 @@ package com.aspsine.photocompressor;
 import android.graphics.Bitmap;
 
 import java.io.File;
+import java.io.Serializable;
 
 /**
  * Created by aspsine on 16/1/12.
  */
-public class CompressOptions {
+public class CompressOptions implements Serializable{
 
     public int maxPixel;
 

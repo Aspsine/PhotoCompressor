@@ -1,5 +1,6 @@
 package com.aspsine.photocompressor;
 
+import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Build;
@@ -26,10 +27,11 @@ public class CompressTask implements Runnable {
     private CompressOptions mOptions;
 
     private CompressHandler mHandler;
-    private int sampleSize;
 
+    /**
+     * default construction is required for initialization
+     */
     public CompressTask() {
-
     }
 
     public void setParams(List<String> paths, CompressOptions options, CompressHandler handler) {
@@ -52,8 +54,8 @@ public class CompressTask implements Runnable {
                     throw new FileNotFoundException("file not found");
                 }
                 Bitmap compressedBitmap = getCompressedBitmap(path, mOptions);
-                String key = getKey(path, mOptions);
-                String compressedPath = convertBitmapToFile(key, compressedBitmap, mOptions);
+                String fileName = getFileName(path, mOptions);
+                String compressedPath = convertBitmapToFile(fileName, compressedBitmap, mOptions);
                 compressedBitmap = null;
                 if (!TextUtils.isEmpty(compressedPath)) {
                     paths.add(compressedPath);
@@ -67,8 +69,12 @@ public class CompressTask implements Runnable {
         }
     }
 
-    protected String convertBitmapToFile(String key, Bitmap bitmap, CompressOptions options) throws IOException {
-        File file = new File(mOptions.dir, key);
+    protected String convertBitmapToFile(String fileName, Bitmap bitmap, CompressOptions options) throws IOException {
+        File dir = mOptions.dir;
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        File file = new File(mOptions.dir, fileName);
         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(file));
         BufferedOutputStream outputStream = new BufferedOutputStream(bufferedOutputStream);
         boolean success = bitmap.compress(options.format, options.quality, outputStream);
@@ -79,46 +85,63 @@ public class CompressTask implements Runnable {
     }
 
     protected Bitmap getCompressedBitmap(String path, CompressOptions compressOptions) throws IOException {
-        BitmapFactory.Options options = createInitDecodeOptions();
+        BitmapFactory.Options options = new BitmapFactory.Options();
+
+        configPreDecodeOptions(options);
 
         BitmapFactory.decodeFile(path, options);
 
-        int outWidth = options.outWidth;
-        int outHeight = options.outHeight;
-
-        float bei = getBei(outWidth, outHeight, compressOptions.maxPixel);
-
-        options.inJustDecodeBounds = false;
-        options.inSampleSize = (int) bei;
+        configFinalDecodeOptions(options, compressOptions);
 
         Bitmap bitmap = BitmapFactory.decodeFile(path, options);
 
         int width = bitmap.getWidth();
+
         int height = bitmap.getHeight();
 
-        bei = getBei(width, height, compressOptions.maxPixel);
+        float bei = getBei(width, height, compressOptions.maxPixel);
+
         width = (int) (width / bei);
+
         height = (int) (height / bei);
 
         return Bitmap.createScaledBitmap(bitmap, width, height, false);
     }
 
 
-    private BitmapFactory.Options createInitDecodeOptions() {
-        BitmapFactory.Options options = new BitmapFactory.Options();
+    private void configPreDecodeOptions(BitmapFactory.Options options) {
         options.inJustDecodeBounds = true;
+    }
+
+    private void configFinalDecodeOptions(BitmapFactory.Options options, CompressOptions compressOptions) {
+        int outWidth = options.outWidth;
+        int outHeight = options.outHeight;
+        options.inJustDecodeBounds = false;
+        options.inSampleSize = (int) getBei(outWidth, outHeight, compressOptions.maxPixel);
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
             options.inPurgeable = true;
             options.inInputShareable = true;
         }
-        return options;
     }
 
-    protected String getKey(String path, CompressOptions options) {
-        return MD5.md5(path);
+    protected String getFileName(String path, CompressOptions options) {
+        //TODO
+        return MD5.md5(path) + getSuffix(options.format);
     }
 
-    public float getBei(int outWidth, int outHeight, int preferSize) {
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    protected String getSuffix(Bitmap.CompressFormat format) {
+        if (format == Bitmap.CompressFormat.JPEG) {
+            return ".jpg";
+        } else if (format == Bitmap.CompressFormat.PNG) {
+            return ".png";
+        } else if (format == Bitmap.CompressFormat.WEBP) {
+            return ".webp";
+        }
+        return "";
+    }
+
+    private float getBei(int outWidth, int outHeight, int preferSize) {
         int biggerOne = outWidth > outHeight ? outWidth : outHeight;
         float bei = 1;
         if (biggerOne > preferSize) {
